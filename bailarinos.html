@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comunidade AM - Bailarinos</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23FFD600'/%3E%3Ctext x='16' y='22' font-family='Arial Black' font-size='14' font-weight='900' text-anchor='middle' fill='%230A0A0A'%3EAM%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<style>
+:root {
+  --yellow: #FFD600;
+  --black: #0A0A0A;
+  --dark: #111;
+  --card: #1a1a1a;
+  --border: rgba(255,214,0,0.15);
+  --text: rgba(255,255,255,0.85);
+  --muted: rgba(255,255,255,0.45);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--black); color: #fff; font-family: 'Nunito', sans-serif; min-height: 100vh; }
+
+/* HEADER */
+.header {
+  background: rgba(10,10,10,0.98);
+  border-bottom: 2px solid var(--yellow);
+  padding: 0 2rem;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 3px;
+  color: var(--yellow);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.header-logo span { color: #fff; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.user-badge {
+  background: rgba(255,214,0,0.1);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  color: var(--yellow);
+  font-weight: 700;
+}
+.notif-btn {
+  position: relative;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 4px;
+}
+.notif-count {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 900;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.btn-logout {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: 'Nunito', sans-serif;
+  transition: 0.2s;
+}
+.btn-logout:hover { background: rgba(255,255,255,0.15); }
+
+/* SCREENS */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* AUTH SCREEN */
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: radial-gradient(ellipse at top, #1a1200 0%, #0a0a0a 60%);
+}
+.auth-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.auth-logo {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.auth-logo h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  letter-spacing: 4px;
+  color: var(--yellow);
+}
+.auth-logo p { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+.auth-tabs {
+  display: flex;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+.auth-tab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--muted);
+  transition: 0.2s;
+  border: none;
+  background: none;
+  font-family: 'Nunito', sans-serif;
+}
+.auth-tab.active { background: var(--yellow); color: #000; }
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.form-group input, .form-group select {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  outline: none;
+  transition: 0.2s;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color: var(--yellow);
+  background: rgba(255,214,0,0.05);
+}
+.form-group select option { background: #222; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.age-badge {
+  display: inline-block;
+  background: rgba(255,214,0,0.15);
+  border: 1px solid var(--yellow);
+  color: var(--yellow);
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-top: 6px;
+}
+.btn-primary {
+  width: 100%;
+  background: var(--yellow);
+  color: #000;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-top: 8px;
+}
+.btn-primary:hover { background: #ffe033; transform: translateY(-1px); }
+.auth-note {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-top: 16px;
+  line-height: 1.6;
+}
+.auth-note a { color: var(--yellow); cursor: pointer; text-decoration: none; }
+
+/* MAIN APP */
+.app-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: calc(100vh - 65px);
+}
+@media (max-width: 768px) {
+  .app-layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+}
+
+/* SIDEBAR */
+.sidebar {
+  background: #0d0d0d;
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  position: sticky;
+  top: 65px;
+  height: calc(100vh - 65px);
+  overflow-y: auto;
+}
+.sidebar-section {
+  padding: 0 16px;
+  margin-bottom: 8px;
+}
+.sidebar-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding: 12px 8px 6px;
+}
+.sidebar-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: 0.15s;
+}
+.sidebar-btn:hover { background: rgba(255,255,255,0.06); }
+.sidebar-btn.active { background: rgba(255,214,0,0.12); color: var(--yellow); }
+.sidebar-divider { height: 1px; background: var(--border); margin: 10px 16px; }
+
+/* MAIN CONTENT */
+.main-content { padding: 28px; max-width: 900px; }
+
+/* FORUM LIST */
+.forum-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.page-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 3px;
+  color: var(--yellow);
+}
+.btn-new-forum {
+  background: var(--yellow);
+  color: #000;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.2s;
+}
+.btn-new-forum:hover { background: #ffe033; transform: translateY(-1px); }
+.forum-quota {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.forum-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+  position: relative;
+}
+.forum-card:hover { border-color: rgba(255,214,0,0.4); transform: translateY(-2px); }
+.forum-card-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  color: #fff;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.forum-card-meta {
+  color: var(--muted);
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.forum-card-preview {
+  color: rgba(255,255,255,0.55);
+  font-size: 0.88rem;
+  margin: 10px 0 8px;
+  line-height: 1.5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.forum-tag {
+  background: rgba(255,214,0,0.12);
+  color: var(--yellow);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.forum-mediator-badge {
+  background: rgba(99,102,241,0.2);
+  color: #a5b4fc;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.forum-stats { display: flex; gap: 16px; }
+.forum-stat { display: flex; align-items: center; gap: 4px; font-size: 0.82rem; color: var(--muted); }
+
+/* FORUM DETAIL */
+.back-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.2s;
+}
+.back-btn:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+.forum-detail-header {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.forum-detail-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 2px;
+  color: var(--yellow);
+  margin-bottom: 10px;
+}
+.forum-detail-body { color: var(--text); line-height: 1.7; margin-bottom: 14px; }
+.forum-detail-meta { color: var(--muted); font-size: 0.82rem; display: flex; gap: 16px; flex-wrap: wrap; }
+
+/* COMMENTS */
+.comments-section { margin-top: 8px; }
+.comments-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 16px;
+}
+.comment-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+  transition: 0.15s;
+}
+.comment-card.reply {
+  margin-left: 32px;
+  border-left: 3px solid rgba(255,214,0,0.3);
+  background: rgba(255,255,255,0.03);
+}
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.comment-avatar {
+  width: 34px; height: 34px;
+  background: var(--yellow);
+  color: #000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.comment-nick { font-weight: 700; color: var(--yellow); font-size: 0.9rem; }
+.comment-date { color: var(--muted); font-size: 0.78rem; }
+.comment-body { color: var(--text); line-height: 1.6; font-size: 0.92rem; }
+.comment-link { color: var(--yellow); text-decoration: underline; }
+.comment-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  align-items: center;
+}
+.action-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: 0.15s;
+}
+.action-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.action-btn.reply-btn:hover { color: var(--yellow); }
+.action-btn.delete-btn:hover { color: #ef4444; }
+
+/* REPLY INPUT */
+.reply-box {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,214,0,0.2);
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 10px;
+  margin-left: 32px;
+  display: none;
+}
+.reply-box.open { display: block; }
+
+/* COMMENT INPUT */
+.comment-input-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.comment-input-title { font-weight: 700; color: var(--yellow); margin-bottom: 12px; font-size: 0.9rem; }
+.comment-textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.92rem;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  transition: 0.2s;
+}
+.comment-textarea:focus { border-color: var(--yellow); }
+.comment-submit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+.char-count { font-size: 0.78rem; color: var(--muted); }
+.btn-comment {
+  background: var(--yellow);
+  color: #000;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-comment:hover { background: #ffe033; }
+
+/* LINK PREVIEW */
+.link-preview {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.link-preview a { color: var(--yellow); }
+
+/* NEW FORUM MODAL */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--dark);
+  border: 1px solid var(--yellow);
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 3px;
+  color: var(--yellow);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-close {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #fff;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* NOTIFICATIONS PANEL */
+.notif-panel {
+  display: none;
+  position: fixed;
+  top: 65px; right: 0;
+  width: min(360px, 100vw);
+  height: calc(100vh - 65px);
+  background: #111;
+  border-left: 1px solid var(--border);
+  z-index: 999;
+  overflow-y: auto;
+  padding: 20px;
+}
+.notif-panel.open { display: block; }
+.notif-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.notif-item:hover { border-color: rgba(255,214,0,0.3); }
+.notif-item.unread { border-left: 3px solid var(--yellow); }
+.notif-text { font-size: 0.88rem; color: var(--text); line-height: 1.5; }
+.notif-time { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+/* PENDING APPROVAL */
+.pending-box {
+  background: rgba(255,214,0,0.06);
+  border: 1px solid rgba(255,214,0,0.2);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  color: var(--muted);
+  margin: 40px 0;
+}
+.pending-icon { font-size: 3rem; margin-bottom: 12px; }
+.pending-title { color: var(--yellow); font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #222;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 99999;
+  border: 1px solid rgba(255,214,0,0.3);
+  transition: transform 0.3s ease;
+  white-space: nowrap;
+  max-width: 90vw;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+.empty-state .emoji { font-size: 3.5rem; margin-bottom: 16px; }
+.empty-state h3 { color: rgba(255,255,255,0.6); font-size: 1.1rem; margin-bottom: 8px; }
+
+/* ADMIN BADGE */
+.admin-badge-pill {
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.4);
+  color: #f87171;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,214,0,0.2); border-radius: 3px; }
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .main-content { padding: 16px; }
+  .auth-box { padding: 24px 20px; }
+  .form-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <a href="index.html" class="header-logo">
+    <span style="color:var(--yellow)">AM</span> <span>BAILARINOS</span>
+  </a>
+  <div class="header-right" id="headerRight" style="display:none;">
+    <span class="user-badge" id="userBadge">&#128075;</span>
+    <button class="notif-btn" onclick="toggleNotifications()" title="Notificacoes">
+      &#128276;
+      <span class="notif-count" id="notifCount"></span>
+    </button>
+    <button class="btn-logout" onclick="logout()">Sair</button>
+  </div>
+</header>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ============================================================ -->
+<!-- SCREEN: AUTH -->
+<!-- ============================================================ -->
+<div class="screen active" id="screenAuth">
+  <div class="auth-screen">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <h1>&#128653; AM BAILARINOS</h1>
+        <p>Comunidade exclusiva do Grupo de Danca Andreia Mendes</p>
+      </div>
+
+      <!-- TABS -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">Entrar</button>
+        <button class="auth-tab" id="tabRegBtn" onclick="switchAuthTab('register')">Cadastrar</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="loginForm">
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="loginEmail" placeholder="seu@email.com">
+        </div>
+        <div class="form-group">
+          <label>CPF (apenas numeros)</label>
+          <input type="text" id="loginCpf" placeholder="00000000000" maxlength="11"
+                 oninput="this.value=this.value.replace(/\D/g,'')">
+        </div>
+        <button class="btn-primary" onclick="doLogin()">&#128274; ENTRAR</button>
+        <p class="auth-note">
+          Nao tem cadastro? <a onclick="switchAuthTab('register')">Cadastre-se aqui</a><br>
+          O acesso e via e-mail + CPF cadastrado.
+        </p>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div id="registerForm" style="display:none;">
+        <div class="form-group">
+          <label>Nome completo do bailarino</label>
+          <input type="text" id="regName" placeholder="Seu nome completo" maxlength="80">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data de nascimento</label>
+            <input type="date" id="regBirth" onchange="calcAge()">
+            <div id="ageDisplay"></div>
+          </div>
+          <div class="form-group">
+            <label>CPF (apenas numeros)</label>
+            <input type="text" id="regCpf" placeholder="00000000000" maxlength="11"
+                   oninput="this.value=this.value.replace(/\D/g,'')">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="regEmail" placeholder="seu@email.com">
+        </div>
+        <div class="form-group">
+          <label>Nickname (aparece nos comentarios)</label>
+          <input type="text" id="regNick" placeholder="Como quer ser chamado?" maxlength="30">
+        </div>
+        <button class="btn-primary" onclick="doRegister()">&#128640; SOLICITAR CADASTRO</button>
+        <p class="auth-note">
+          Seu cadastro sera analisado pelo ADM. Voce recebera um aviso quando for aprovado.<br>
+          Ja tem cadastro? <a onclick="switchAuthTab('login')">Entre aqui</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN: PENDING APPROVAL -->
+<!-- ============================================================ -->
+<div class="screen" id="screenPending">
+  <div style="display:flex;align-items:center;justify-content:center;min-height:80vh;padding:2rem;">
+    <div class="pending-box" style="max-width:480px;">
+      <div class="pending-icon">&#9203;</div>
+      <div class="pending-title">Cadastro em Analise!</div>
+      <p>Seu cadastro foi enviado e esta aguardando aprovacao do ADM. Voce sera notificado em breve!</p>
+      <br>
+      <p style="font-size:0.85rem;">Enquanto isso, aproveite o site principal:</p>
+      <a href="index.html" style="display:inline-block;margin-top:12px;background:var(--yellow);color:#000;padding:10px 24px;border-radius:8px;font-weight:700;text-decoration:none;">Ir para o site AM</a>
+      <br><br>
+      <button class="btn-logout" onclick="logout()" style="margin-top:8px;">Sair</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN: MAIN APP -->
+<!-- ============================================================ -->
+<div class="screen" id="screenApp">
+
+  <!-- NOTIFICATIONS PANEL -->
+  <div class="notif-panel" id="notifPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;color:var(--yellow);">&#128276; NOTIFICACOES</h3>
+      <button onclick="markAllRead()" style="background:none;border:none;color:var(--muted);font-size:0.8rem;cursor:pointer;">Marcar todas como lidas</button>
+    </div>
+    <div id="notifList">
+      <div class="empty-state">
+        <div class="emoji">&#128276;</div>
+        <h3>Sem notificacoes</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Menu</div>
+        <button class="sidebar-btn active" id="sideForums" onclick="showView('forums')">&#128172; Forums de Debate</button>
+        <button class="sidebar-btn" id="sidePerfil" onclick="showView('perfil')">&#128100; Meu Perfil</button>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Admin</div>
+        <button class="sidebar-btn" id="sideAdmin" style="display:none;" onclick="showView('admin')">&#9881; Painel Admin</button>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section" style="padding-top:8px;">
+        <a href="index.html" class="sidebar-btn" style="color:var(--muted);font-size:0.82rem;">&#8592; Voltar ao site principal</a>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+
+      <!-- VIEW: FORUMS -->
+      <div id="viewForums">
+        <div class="forum-header">
+          <h1 class="page-title">&#128172; FORUMS</h1>
+          <button class="btn-new-forum" onclick="openNewForum()">+ Novo Forum</button>
+        </div>
+        <div class="forum-quota" id="quotaInfo">Carregando...</div>
+        <div id="forumsList">
+          <div class="empty-state">
+            <div class="emoji">&#128172;</div>
+            <h3>Nenhum forum ainda</h3>
+            <p>Seja o primeiro a criar um forum de debate!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: FORUM DETAIL -->
+      <div id="viewForumDetail" style="display:none;">
+        <button class="back-btn" onclick="backToForums()">&#8592; Voltar aos Forums</button>
+        <div class="forum-detail-header" id="forumDetailHeader"></div>
+
+        <!-- COMMENT INPUT -->
+        <div class="comment-input-box">
+          <div class="comment-input-title">&#128172; Participar do debate</div>
+          <textarea class="comment-textarea" id="commentText" placeholder="Compartilhe sua opiniao... Pode colocar links do YouTube, Instagram ou TikTok!" maxlength="800" oninput="updateCommentCount()"></textarea>
+          <div class="comment-submit-row">
+            <span class="char-count"><span id="commentCount">0</span>/800</span>
+            <button class="btn-comment" onclick="submitComment()">COMENTAR &#128172;</button>
+          </div>
+        </div>
+
+        <div class="comments-section">
+          <div class="comments-title" id="commentsTitle">COMENTARIOS</div>
+          <div id="commentsList"></div>
+        </div>
+      </div>
+
+      <!-- VIEW: PERFIL -->
+      <div id="viewPerfil" style="display:none;">
+        <h1 class="page-title" style="margin-bottom:24px;">&#128100; MEU PERFIL</h1>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+            <div style="width:64px;height:64px;background:var(--yellow);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:900;color:#000;" id="perfilAvatar">?</div>
+            <div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--yellow);" id="perfilNick">-</div>
+              <div style="color:var(--muted);font-size:0.85rem;" id="perfilName">-</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;">
+              <div style="color:var(--muted);font-size:0.75rem;font-weight:700;letter-spacing:1px;margin-bottom:6px;">IDADE</div>
+              <div style="font-weight:700;font-size:1.1rem;" id="perfilAge">-</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;">
+              <div style="color:var(--muted);font-size:0.75rem;font-weight:700;letter-spacing:1px;margin-bottom:6px;">MEMBRO DESDE</div>
+              <div style="font-weight:700;font-size:1.1rem;" id="perfilSince">-</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;">
+              <div style="color:var(--muted);font-size:0.75rem;font-weight:700;letter-spacing:1px;margin-bottom:6px;">FORUMS CRIADOS</div>
+              <div style="font-weight:700;font-size:1.1rem;" id="perfilForums">-</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;">
+              <div style="color:var(--muted);font-size:0.75rem;font-weight:700;letter-spacing:1px;margin-bottom:6px;">COMENTARIOS</div>
+              <div style="font-weight:700;font-size:1.1rem;" id="perfilComments">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: ADMIN -->
+      <div id="viewAdmin" style="display:none;">
+        <h1 class="page-title" style="margin-bottom:24px;">&#9881; PAINEL ADMIN</h1>
+
+        <!-- Cadastros pendentes -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;">
+          <h3 style="color:var(--yellow);font-family:'Bebas Neue',sans-serif;letter-spacing:2px;margin-bottom:16px;">&#9203; CADASTROS PENDENTES</h3>
+          <div id="adminRegPending">
+            <p style="color:var(--muted);text-align:center;padding:16px;">Carregando...</p>
+          </div>
+        </div>
+
+        <!-- Forums para moderar -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;">
+          <h3 style="color:var(--yellow);font-family:'Bebas Neue',sans-serif;letter-spacing:2px;margin-bottom:16px;">&#128172; TODOS OS FORUMS</h3>
+          <div id="adminForumsList">
+            <p style="color:var(--muted);text-align:center;padding:16px;">Carregando...</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- NEW FORUM MODAL -->
+<div class="modal-overlay" id="newForumModal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span>&#128172; NOVO FORUM</span>
+      <button class="modal-close" onclick="closeNewForum()">&#10005;</button>
+    </div>
+    <div class="form-group">
+      <label>Titulo do forum &#129321;</label>
+      <input type="text" id="forumTitle" placeholder="Ex: Qual a melhor musica para treinar hip hop?" maxlength="100">
+    </div>
+    <div class="form-group">
+      <label>Descricao / Abertura do debate</label>
+      <textarea class="comment-textarea" id="forumBody" placeholder="Conte mais sobre o tema que quer debater..." maxlength="600" style="min-height:120px;"></textarea>
+    </div>
+    <p style="color:var(--muted);font-size:0.8rem;margin-bottom:16px;">
+      &#128161; Voce sera o mediador deste forum e podera excluir comentarios.<br>
+      &#128203; Voce pode criar <strong id="quotaLeft" style="color:var(--yellow);">...</strong> forums nos proximos 6 meses.
+    </p>
+    <button class="btn-primary" onclick="createForum()">CRIAR FORUM &#128640;</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// FIREBASE CONFIG
+// ============================================================
+var firebaseConfig = {
+  apiKey: "AIzaSyDALpjncQoQFsbSTfxQ5AoIp4XNqucM5do",
+  authDomain: "andreia-mendes-am.firebaseapp.com",
+  projectId: "andreia-mendes-am",
+  storageBucket: "andreia-mendes-am.firebasestorage.app",
+  messagingSenderId: "211472014441",
+  appId: "1:211472014441:web:a76790115b639726f116f8"
+};
+
+firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var auth = firebase.auth();
+
+// ============================================================
+// STATE
+// ============================================================
+var currentUser = null;     // Firebase auth user
+var currentBailarin = null; // Firestore bailarin doc
+var currentForumId = null;
+var currentForumData = null;
+var isAdmin = false;
+var ADMIN_EMAILS = ["adm.andreiamendes@gmail.com"];
+var MAX_FORUMS_PER_6M = 5;
+
+// ============================================================
+// INIT
+// ============================================================
+auth.onAuthStateChanged(function(user) {
+  if (user) {
+    currentUser = user;
+    loadBailarin(user.uid);
+  } else {
+    currentUser = null;
+    currentBailarin = null;
+    showScreen("screenAuth");
+    document.getElementById("headerRight").style.display = "none";
+  }
+});
+
+function loadBailarin(uid) {
+  db.collection("bailarinos").doc(uid).get().then(function(doc) {
+    if (!doc.exists) {
+      // Nao tem perfil - pode ter pedido cadastro
+      db.collection("cadastros").where("uid","==",uid).get().then(function(snap) {
+        if (!snap.empty) {
+          var cad = snap.docs[0].data();
+          if (cad.status === "pending") { showScreen("screenPending"); }
+          else { showScreen("screenAuth"); }
+        } else {
+          showScreen("screenAuth");
+        }
+      });
+      return;
+    }
+    currentBailarin = doc.data();
+    currentBailarin.id = uid;
+    isAdmin = ADMIN_EMAILS.includes(currentUser.email);
+
+    // Atualizar header
+    document.getElementById("headerRight").style.display = "flex";
+    document.getElementById("userBadge").textContent = currentBailarin.nickname || currentBailarin.nome;
+    if (isAdmin) {
+      document.getElementById("sideAdmin").style.display = "flex";
+    }
+
+    showScreen("screenApp");
+    loadNotifications();
+    showView("forums");
+    loadForums();
+    updatePerfilView();
+  }).catch(function(e) {
+    showToast("Erro ao carregar perfil: " + e.message);
+  });
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+function switchAuthTab(tab) {
+  document.getElementById("loginForm").style.display = tab==="login" ? "block" : "none";
+  document.getElementById("registerForm").style.display = tab==="register" ? "block" : "none";
+  document.getElementById("tabLoginBtn").classList.toggle("active", tab==="login");
+  document.getElementById("tabRegBtn").classList.toggle("active", tab==="register");
+}
+
+function calcAge() {
+  var birth = document.getElementById("regBirth").value;
+  if (!birth) return;
+  var today = new Date();
+  var b = new Date(birth);
+  var age = today.getFullYear() - b.getFullYear();
+  var m = today.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < b.getDate())) age--;
+  document.getElementById("ageDisplay").innerHTML = '<span class="age-badge">Idade: ' + age + ' anos</span>';
+}
+
+function doRegister() {
+  var nome = document.getElementById("regName").value.trim();
+  var birth = document.getElementById("regBirth").value;
+  var cpf = document.getElementById("regCpf").value.trim();
+  var email = document.getElementById("regEmail").value.trim();
+  var nick = document.getElementById("regNick").value.trim();
+
+  if (!nome || !birth || !cpf || !email || !nick) { showToast("Preencha todos os campos!"); return; }
+  if (cpf.length !== 11) { showToast("CPF deve ter 11 digitos!"); return; }
+  if (nick.length < 3) { showToast("Nickname muito curto!"); return; }
+
+  // Calcular idade
+  var b = new Date(birth);
+  var today = new Date();
+  var age = today.getFullYear() - b.getFullYear();
+
+  // Usar CPF como senha do Firebase (email + cpf)
+  var senha = cpf + "_AM2025";
+
+  auth.createUserWithEmailAndPassword(email, senha).then(function(cred) {
+    return db.collection("cadastros").add({
+      uid: cred.user.uid,
+      nome: nome,
+      nickname: nick,
+      email: email,
+      cpf: cpf, // Em producao, usar hash do CPF
+      nascimento: birth,
+      idade: age,
+      status: "pending",
+      dataCadastro: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }).then(function() {
+    showToast("Cadastro enviado! Aguarde aprovacao do ADM.");
+    showScreen("screenPending");
+  }).catch(function(e) {
+    if (e.code === "auth/email-already-in-use") {
+      showToast("Este e-mail ja esta cadastrado. Faca login.");
+      switchAuthTab("login");
+    } else {
+      showToast("Erro: " + e.message);
+    }
+  });
+}
+
+function doLogin() {
+  var email = document.getElementById("loginEmail").value.trim();
+  var cpf = document.getElementById("loginCpf").value.trim();
+
+  if (!email || !cpf) { showToast("Preencha e-mail e CPF!"); return; }
+  if (cpf.length !== 11) { showToast("CPF deve ter 11 digitos!"); return; }
+
+  var senha = cpf + "_AM2025";
+
+  auth.signInWithEmailAndPassword(email, senha).then(function(cred) {
+    // onAuthStateChanged cuida do resto
+  }).catch(function(e) {
+    if (e.code === "auth/user-not-found" || e.code === "auth/wrong-password") {
+      showToast("E-mail ou CPF incorretos!");
+    } else {
+      showToast("Erro ao entrar: " + e.message);
+    }
+  });
+}
+
+function logout() {
+  auth.signOut().then(function() {
+    currentUser = null; currentBailarin = null;
+    showScreen("screenAuth");
+    document.getElementById("headerRight").style.display = "none";
+  });
+}
+
+// ============================================================
+// FORUMS
+// ============================================================
+function loadForums() {
+  db.collection("forums")
+    .orderBy("createdAt","desc")
+    .onSnapshot(function(snap) {
+      var forums = [];
+      snap.forEach(function(doc){ var d=doc.data(); d.id=doc.id; forums.push(d); });
+      renderForumsList(forums);
+      updateQuotaInfo();
+    }, function(e){ showToast("Erro ao carregar forums: " + e.message); });
+}
+
+function renderForumsList(forums) {
+  var el = document.getElementById("forumsList");
+  if (forums.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="emoji">&#128172;</div><h3>Nenhum forum ainda</h3><p>Seja o primeiro a criar um forum de debate!</p></div>';
+    return;
+  }
+  el.innerHTML = forums.map(function(f) {
+    var dt = f.createdAt && f.createdAt.toDate ? f.createdAt.toDate().toLocaleDateString("pt-BR") : "";
+    var isCreator = currentBailarin && f.createdBy === currentBailarin.id;
+    return '<div class="forum-card" onclick="openForum(\'' + f.id + '\')">'
+      + '<div class="forum-card-title">'
+      + '&#128172; ' + escHtml(f.title)
+      + (isCreator ? '<span class="forum-mediator-badge">Seu forum</span>' : '')
+      + '</div>'
+      + '<div class="forum-card-preview">' + escHtml(f.body) + '</div>'
+      + '<div class="forum-card-meta">'
+      + '<span>por <strong style="color:var(--yellow);">' + escHtml(f.creatorNick||"?") + '</strong></span>'
+      + '<span>&#128197; ' + dt + '</span>'
+      + '<span>&#128172; ' + (f.commentCount||0) + ' comentarios</span>'
+      + (isAdmin ? '<button onclick="event.stopPropagation();deleteForumAdmin(\'' + f.id + '\')" style="background:#ef4444;color:#fff;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-left:auto;">Excluir</button>' : '')
+      + '</div>'
+      + '</div>';
+  }).join("");
+}
+
+function updateQuotaInfo() {
+  if (!currentBailarin) return;
+  var sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  db.collection("forums")
+    .where("createdBy","==",currentBailarin.id)
+    .where("createdAt",">=",sixMonthsAgo)
+    .get()
+    .then(function(snap) {
+      var used = snap.size;
+      var left = MAX_FORUMS_PER_6M - used;
+      document.getElementById("quotaInfo").textContent = "Voce usou " + used + " de " + MAX_FORUMS_PER_6M + " forums nos ultimos 6 meses. Restam " + left + " disponíveis.";
+      document.getElementById("quotaLeft").textContent = left;
+      document.getElementById("perfilForums").textContent = used + "/" + MAX_FORUMS_PER_6M;
+    });
+}
+
+function openForum(forumId) {
+  db.collection("forums").doc(forumId).get().then(function(doc) {
+    if (!doc.exists) { showToast("Forum nao encontrado."); return; }
+    currentForumId = forumId;
+    currentForumData = doc.data();
+    currentForumData.id = forumId;
+    renderForumDetail();
+    document.getElementById("viewForums").style.display = "none";
+    document.getElementById("viewForumDetail").style.display = "block";
+    loadComments(forumId);
+  });
+}
+
+function renderForumDetail() {
+  var f = currentForumData;
+  var dt = f.createdAt && f.createdAt.toDate ? f.createdAt.toDate().toLocaleDateString("pt-BR") : "";
+  var isCreator = currentBailarin && f.createdBy === currentBailarin.id;
+  document.getElementById("forumDetailHeader").innerHTML =
+    '<div class="forum-detail-title">&#128172; ' + escHtml(f.title) + '</div>'
+    + '<div class="forum-detail-body">' + escHtml(f.body) + '</div>'
+    + '<div class="forum-detail-meta">'
+    + '<span>por <strong style="color:var(--yellow);">' + escHtml(f.creatorNick||"?") + '</strong></span>'
+    + '<span>&#128197; ' + dt + '</span>'
+    + '<span>&#128172; ' + (f.commentCount||0) + ' comentarios</span>'
+    + (isCreator ? '<span class="forum-mediator-badge">&#127775; Voce e o mediador</span>' : '')
+    + '</div>';
+}
+
+function backToForums() {
+  currentForumId = null; currentForumData = null;
+  document.getElementById("viewForumDetail").style.display = "none";
+  document.getElementById("viewForums").style.display = "block";
+}
+
+// ============================================================
+// COMMENTS
+// ============================================================
+function loadComments(forumId) {
+  db.collection("forums").doc(forumId).collection("comments")
+    .orderBy("createdAt","asc")
+    .onSnapshot(function(snap) {
+      var comments = [];
+      snap.forEach(function(doc){ var d=doc.data(); d.id=doc.id; comments.push(d); });
+      renderComments(comments);
+      document.getElementById("commentsTitle").textContent = "COMENTARIOS (" + comments.length + ")";
+    });
+}
+
+function renderComments(comments) {
+  var el = document.getElementById("commentsList");
+  // Separar root comments e replies
+  var roots = comments.filter(function(c){ return !c.replyTo; });
+  var replies = comments.filter(function(c){ return !!c.replyTo; });
+
+  if (roots.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="emoji">&#128172;</div><h3>Sem comentarios ainda</h3><p>Seja o primeiro a comentar!</p></div>';
+    return;
+  }
+
+  el.innerHTML = roots.map(function(c) {
+    var myReplies = replies.filter(function(r){ return r.replyTo === c.id; });
+    var isMyComment = currentBailarin && c.userId === currentBailarin.id;
+    var isMediator = currentForumData && currentBailarin && currentForumData.createdBy === currentBailarin.id;
+    var canDelete = isMyComment || isMediator || isAdmin;
+    var dt = c.createdAt && c.createdAt.toDate ? c.createdAt.toDate().toLocaleString("pt-BR") : "";
+
+    return '<div class="comment-card" id="comment-' + c.id + '">'
+      + renderCommentInner(c, canDelete, dt, false)
+      + '<div id="replyBox-' + c.id + '" class="reply-box">'
+      + '<textarea class="comment-textarea" id="replyText-' + c.id + '" placeholder="Respondendo a ' + escHtml(c.nick||"") + '..." maxlength="600" style="min-height:60px;" oninput="updateCommentCount()"></textarea>'
+      + '<div style="display:flex;justify-content:flex-end;margin-top:8px;">'
+      + '<button class="btn-comment" style="font-size:0.85rem;padding:6px 14px;" onclick="submitReply(\'' + c.id + '\')">RESPONDER</button>'
+      + '</div></div>'
+      + myReplies.map(function(r) {
+          var rDt = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleString("pt-BR") : "";
+          var rMine = currentBailarin && r.userId === currentBailarin.id;
+          var rCanDelete = rMine || isMediator || isAdmin;
+          return '<div class="comment-card reply">' + renderCommentInner(r, rCanDelete, rDt, true) + '</div>';
+        }).join("")
+      + '</div>';
+  }).join("");
+}
+
+function renderCommentInner(c, canDelete, dt, isReply) {
+  var nick = escHtml(c.nick||"?");
+  var body = processLinks(escHtml(c.body||""));
+  return '<div class="comment-header">'
+    + '<div class="comment-avatar">' + (nick.substring(0,2).toUpperCase()) + '</div>'
+    + '<div><div class="comment-nick">@' + nick + '</div><div class="comment-date">' + dt + '</div></div>'
+    + '</div>'
+    + '<div class="comment-body">' + body + '</div>'
+    + '<div class="comment-actions">'
+    + (!isReply ? '<button class="action-btn reply-btn" onclick="toggleReply(\'' + c.id + '\')">&#128172; Responder</button>' : '')
+    + (canDelete ? '<button class="action-btn delete-btn" onclick="deleteComment(\'' + c.id + '\')">&#128465; Excluir</button>' : '')
+    + '</div>';
+}
+
+function processLinks(text) {
+  // Detectar e transformar links de video em clicaveis
+  var urlRegex = /(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|instagram\.com\/(?:p|reel)\/|tiktok\.com\/)[^\s<]+)/g;
+  return text.replace(urlRegex, function(url) {
+    var label = url.includes("youtu") ? "&#9654; YouTube" :
+                url.includes("instagram") ? "&#128247; Instagram" :
+                url.includes("tiktok") ? "&#127926; TikTok" : "Link";
+    return '<a href="' + url + '" target="_blank" class="comment-link">' + label + '</a>';
+  });
+}
+
+function toggleReply(commentId) {
+  var box = document.getElementById("replyBox-" + commentId);
+  if (box) { box.classList.toggle("open"); }
+}
+
+function submitComment() {
+  var text = (document.getElementById("commentText")||{}).value;
+  text = (text||"").trim();
+  if (!text) { showToast("Escreva algo antes de comentar!"); return; }
+  if (text.length < 5) { showToast("Comentario muito curto!"); return; }
+  if (!currentForumId || !currentBailarin) return;
+
+  db.collection("forums").doc(currentForumId).collection("comments").add({
+    body: text,
+    userId: currentBailarin.id,
+    nick: currentBailarin.nickname || currentBailarin.nome,
+    replyTo: null,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    document.getElementById("commentText").value = "";
+    document.getElementById("commentCount").textContent = "0";
+    // Incrementar contador
+    db.collection("forums").doc(currentForumId).update({
+      commentCount: firebase.firestore.FieldValue.increment(1)
+    });
+    // Notificar criador do forum
+    if (currentForumData.createdBy !== currentBailarin.id) {
+      addNotification(currentForumData.createdBy,
+        currentBailarin.nickname + " comentou no seu forum: " + currentForumData.title.substring(0,40));
+    }
+    showToast("Comentario publicado!");
+  }).catch(function(e){ showToast("Erro: " + e.message); });
+}
+
+function submitReply(commentId) {
+  var text = (document.getElementById("replyText-" + commentId)||{}).value;
+  text = (text||"").trim();
+  if (!text) { showToast("Escreva a resposta!"); return; }
+  if (!currentForumId || !currentBailarin) return;
+
+  // Pegar nick do comentario original
+  db.collection("forums").doc(currentForumId).collection("comments").doc(commentId).get()
+    .then(function(doc) {
+      var originalNick = doc.exists ? (doc.data().nick||"?") : "?";
+      var originalUserId = doc.exists ? doc.data().userId : null;
+
+      return db.collection("forums").doc(currentForumId).collection("comments").add({
+        body: text,
+        userId: currentBailarin.id,
+        nick: currentBailarin.nickname || currentBailarin.nome,
+        replyTo: commentId,
+        replyToNick: originalNick,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function() {
+        // Notificar quem foi respondido
+        if (originalUserId && originalUserId !== currentBailarin.id) {
+          addNotification(originalUserId,
+            currentBailarin.nickname + " respondeu ao seu comentario no forum: " + currentForumData.title.substring(0,40));
+        }
+        return null;
+      });
+    }).then(function() {
+      var box = document.getElementById("replyBox-" + commentId);
+      if (box) { box.innerHTML = ""; box.classList.remove("open"); }
+      db.collection("forums").doc(currentForumId).update({
+        commentCount: firebase.firestore.FieldValue.increment(1)
+      });
+      showToast("Resposta publicada!");
+    }).catch(function(e){ showToast("Erro: " + e.message); });
+}
+
+function deleteComment(commentId) {
+  if (!confirm("Excluir este comentario?")) return;
+  db.collection("forums").doc(currentForumId).collection("comments").doc(commentId).delete()
+    .then(function() {
+      db.collection("forums").doc(currentForumId).update({
+        commentCount: firebase.firestore.FieldValue.increment(-1)
+      });
+      showToast("Comentario excluido.");
+    }).catch(function(e){ showToast("Erro: " + e.message); });
+}
+
+function updateCommentCount() {
+  var el = document.getElementById("commentText");
+  var cnt = document.getElementById("commentCount");
+  if (el && cnt) cnt.textContent = (el.value||"").length;
+}
+
+// ============================================================
+// CRIAR FORUM
+// ============================================================
+function openNewForum() {
+  // Verificar quota
+  var sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  db.collection("forums")
+    .where("createdBy","==",currentBailarin.id)
+    .where("createdAt",">=",sixMonthsAgo)
+    .get()
+    .then(function(snap) {
+      if (snap.size >= MAX_FORUMS_PER_6M) {
+        showToast("Voce ja criou " + MAX_FORUMS_PER_6M + " forums nos ultimos 6 meses!");
+        return;
+      }
+      document.getElementById("newForumModal").classList.add("open");
+    });
+}
+
+function closeNewForum() {
+  document.getElementById("newForumModal").classList.remove("open");
+}
+
+function createForum() {
+  var title = (document.getElementById("forumTitle")||{}).value;
+  var body = (document.getElementById("forumBody")||{}).value;
+  title = (title||"").trim(); body = (body||"").trim();
+  if (!title || title.length < 5) { showToast("Titulo muito curto!"); return; }
+  if (!body || body.length < 20) { showToast("Descricao muito curta!"); return; }
+  if (!currentBailarin) return;
+
+  db.collection("forums").add({
+    title: title,
+    body: body,
+    createdBy: currentBailarin.id,
+    creatorNick: currentBailarin.nickname || currentBailarin.nome,
+    commentCount: 0,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    closeNewForum();
+    document.getElementById("forumTitle").value = "";
+    document.getElementById("forumBody").value = "";
+    showToast("Forum criado com sucesso!");
+    updateQuotaInfo();
+  }).catch(function(e){ showToast("Erro: " + e.message); });
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+function addNotification(userId, text) {
+  db.collection("bailarinos").doc(userId).collection("notifications").add({
+    text: text,
+    read: false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+function loadNotifications() {
+  if (!currentBailarin) return;
+  db.collection("bailarinos").doc(currentBailarin.id).collection("notifications")
+    .orderBy("createdAt","desc").limit(20)
+    .onSnapshot(function(snap) {
+      var notifs = [];
+      snap.forEach(function(doc){ var d=doc.data(); d.id=doc.id; notifs.push(d); });
+      var unread = notifs.filter(function(n){ return !n.read; }).length;
+      var badge = document.getElementById("notifCount");
+      if (badge) { badge.textContent = unread||""; badge.style.display = unread?"flex":"none"; }
+      renderNotifications(notifs);
+    });
+}
+
+function renderNotifications(notifs) {
+  var el = document.getElementById("notifList");
+  if (!el) return;
+  if (notifs.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="emoji">&#128276;</div><h3>Sem notificacoes</h3></div>';
+    return;
+  }
+  el.innerHTML = notifs.map(function(n) {
+    var dt = n.createdAt && n.createdAt.toDate ? n.createdAt.toDate().toLocaleString("pt-BR") : "";
+    return '<div class="notif-item ' + (n.read?"":"unread") + '" onclick="markRead(\'' + n.id + '\')">'
+      + '<div class="notif-text">&#128276; ' + escHtml(n.text) + '</div>'
+      + '<div class="notif-time">' + dt + '</div>'
+      + '</div>';
+  }).join("");
+}
+
+function markRead(notifId) {
+  if (!currentBailarin) return;
+  db.collection("bailarinos").doc(currentBailarin.id)
+    .collection("notifications").doc(notifId).update({ read: true });
+}
+
+function markAllRead() {
+  if (!currentBailarin) return;
+  db.collection("bailarinos").doc(currentBailarin.id)
+    .collection("notifications")
+    .where("read","==",false).get()
+    .then(function(snap) {
+      var batch = db.batch();
+      snap.forEach(function(doc){ batch.update(doc.ref, { read: true }); });
+      return batch.commit();
+    }).then(function(){ showToast("Todas marcadas como lidas!"); });
+}
+
+function toggleNotifications() {
+  var panel = document.getElementById("notifPanel");
+  panel.classList.toggle("open");
+}
+
+// ============================================================
+// ADMIN
+// ============================================================
+function loadAdminData() {
+  // Cadastros pendentes
+  db.collection("cadastros").where("status","==","pending").get().then(function(snap) {
+    var el = document.getElementById("adminRegPending");
+    if (snap.empty) {
+      el.innerHTML = '<p style="color:var(--muted);text-align:center;">Nenhum cadastro pendente.</p>';
+      return;
+    }
+    el.innerHTML = snap.docs.map(function(doc) {
+      var d = doc.data();
+      return '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,214,0,0.2);border-radius:10px;padding:14px;margin-bottom:10px;">'
+        + '<div style="font-weight:700;color:var(--yellow);margin-bottom:6px;">' + escHtml(d.nome) + ' <span style="color:var(--muted);font-size:0.8rem;font-weight:400;">@' + escHtml(d.nickname) + '</span></div>'
+        + '<div style="color:var(--muted);font-size:0.82rem;margin-bottom:10px;">' + escHtml(d.email) + ' | ' + d.idade + ' anos | Solicitado em: ' + (d.dataCadastro&&d.dataCadastro.toDate?d.dataCadastro.toDate().toLocaleDateString("pt-BR"):"") + '</div>'
+        + '<div style="display:flex;gap:8px;">'
+        + '<button onclick="approveReg(\'' + doc.id + '\',\'' + d.uid + '\')" style="background:#22c55e;color:#000;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:700;">Aprovar</button>'
+        + '<button onclick="rejectReg(\'' + doc.id + '\',\'' + d.uid + '\')" style="background:#ef4444;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:700;">Recusar</button>'
+        + '</div></div>';
+    }).join("");
+  });
+
+  // Todos os forums
+  db.collection("forums").orderBy("createdAt","desc").get().then(function(snap) {
+    var el = document.getElementById("adminForumsList");
+    if (snap.empty) {
+      el.innerHTML = '<p style="color:var(--muted);text-align:center;">Nenhum forum.</p>';
+      return;
+    }
+    el.innerHTML = snap.docs.map(function(doc) {
+      var d = doc.data();
+      return '<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;">'
+        + '<div><div style="font-weight:700;color:#fff;font-size:0.95rem;">' + escHtml(d.title) + '</div>'
+        + '<div style="color:var(--muted);font-size:0.78rem;">por @' + escHtml(d.creatorNick||"?") + ' | ' + (d.commentCount||0) + ' comentarios</div></div>'
+        + '<button onclick="deleteForumAdmin(\'' + doc.id + '\')" style="background:#ef4444;color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:0.8rem;white-space:nowrap;">Excluir</button>'
+        + '</div>';
+    }).join("");
+  });
+}
+
+function approveReg(cadId, uid) {
+  var batch = db.batch();
+  // Pegar dados do cadastro
+  db.collection("cadastros").doc(cadId).get().then(function(doc) {
+    var d = doc.data();
+    // Criar bailarino
+    batch.set(db.collection("bailarinos").doc(uid), {
+      nome: d.nome,
+      nickname: d.nickname,
+      email: d.email,
+      nascimento: d.nascimento,
+      idade: d.idade,
+      membroDesde: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // Atualizar status do cadastro
+    batch.update(db.collection("cadastros").doc(cadId), { status: "approved" });
+    return batch.commit();
+  }).then(function() {
+    showToast("Bailarino aprovado!");
+    loadAdminData();
+  }).catch(function(e){ showToast("Erro: " + e.message); });
+}
+
+function rejectReg(cadId, uid) {
+  if (!confirm("Recusar este cadastro?")) return;
+  db.collection("cadastros").doc(cadId).update({ status: "rejected" })
+    .then(function() { showToast("Cadastro recusado."); loadAdminData(); });
+}
+
+function deleteForumAdmin(forumId) {
+  if (!confirm("Excluir este forum e todos os comentarios?")) return;
+  // Excluir comentarios primeiro
+  db.collection("forums").doc(forumId).collection("comments").get()
+    .then(function(snap) {
+      var batch = db.batch();
+      snap.forEach(function(doc){ batch.delete(doc.ref); });
+      batch.delete(db.collection("forums").doc(forumId));
+      return batch.commit();
+    }).then(function() {
+      showToast("Forum excluido!");
+      if (currentForumId === forumId) backToForums();
+      loadAdminData();
+    }).catch(function(e){ showToast("Erro: " + e.message); });
+}
+
+// ============================================================
+// PERFIL
+// ============================================================
+function updatePerfilView() {
+  if (!currentBailarin) return;
+  var nick = currentBailarin.nickname || currentBailarin.nome || "?";
+  document.getElementById("perfilAvatar").textContent = nick.substring(0,2).toUpperCase();
+  document.getElementById("perfilNick").textContent = "@" + nick;
+  document.getElementById("perfilName").textContent = currentBailarin.nome || "";
+  var age = currentBailarin.idade || "?";
+  document.getElementById("perfilAge").textContent = age + " anos";
+  var since = currentBailarin.membroDesde && currentBailarin.membroDesde.toDate
+    ? currentBailarin.membroDesde.toDate().toLocaleDateString("pt-BR") : "Recente";
+  document.getElementById("perfilSince").textContent = since;
+
+  // Contar comentarios
+  db.collection("forums").get().then(function(snap) {
+    var promises = snap.docs.map(function(forum) {
+      return forum.ref.collection("comments").where("userId","==",currentBailarin.id).get();
+    });
+    return Promise.all(promises);
+  }).then(function(results) {
+    var total = results.reduce(function(sum, r){ return sum + r.size; }, 0);
+    document.getElementById("perfilComments").textContent = total;
+  });
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showView(view) {
+  ["viewForums","viewForumDetail","viewPerfil","viewAdmin"].forEach(function(v) {
+    document.getElementById(v).style.display = "none";
+  });
+  ["sideForums","sidePerfil","sideAdmin"].forEach(function(b) {
+    var el = document.getElementById(b);
+    if (el) el.classList.remove("active");
+  });
+
+  if (view === "forums") {
+    document.getElementById("viewForums").style.display = "block";
+    document.getElementById("sideForums").classList.add("active");
+    updateQuotaInfo();
+  } else if (view === "perfil") {
+    document.getElementById("viewPerfil").style.display = "block";
+    document.getElementById("sidePerfil").classList.add("active");
+    updatePerfilView();
+    updateQuotaInfo();
+  } else if (view === "admin" && isAdmin) {
+    document.getElementById("viewAdmin").style.display = "block";
+    document.getElementById("sideAdmin").classList.add("active");
+    loadAdminData();
+  }
+}
+
+function showScreen(screenId) {
+  ["screenAuth","screenPending","screenApp"].forEach(function(s) {
+    var el = document.getElementById(s);
+    if (el) el.classList.remove("active");
+  });
+  var target = document.getElementById(screenId);
+  if (target) target.classList.add("active");
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function escHtml(str) {
+  return String(str||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function showToast(msg) {
+  var t = document.getElementById("toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(window._toastTimeout);
+  window._toastTimeout = setTimeout(function(){ t.classList.remove("show"); }, 3500);
+}
+
+// Fechar notificacoes ao clicar fora
+document.addEventListener("click", function(e) {
+  var panel = document.getElementById("notifPanel");
+  var btn = document.querySelector(".notif-btn");
+  if (panel && panel.classList.contains("open") && !panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+    panel.classList.remove("open");
+  }
+});
+</script>
+</body>
+</html>
