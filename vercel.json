@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    { "source": "/api/og", "destination": "/api/og.js" }
+  ],
+  "headers": [
+    {
+      "source": "/api/og",
+      "headers": [
+        { "key": "Cache-Control", "value": "s-maxage=3600, stale-while-revalidate" }
+      ]
+    }
+  ]
+}
